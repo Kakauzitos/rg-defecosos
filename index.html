@@ -13,23 +13,29 @@
     <div class="login-wrap" id="loginWrap">
         <div class="login-card">
             <div class="login-title">Acessar RG</div>
-            <div class="login-sub">Código + PIN</div>
+            <div class="login-sub">Email + Senha</div>
 
-            <input id="codeInput" class="login-input" placeholder="RG" autocomplete="off">
-            <input id="pinInput" class="login-input" placeholder="PIN" autocomplete="off">
+            <input id="emailInput" class="login-input" placeholder="email@exemplo.com" autocomplete="off">
+            <input id="passInput" class="login-input" placeholder="Senha" type="password" autocomplete="off">
 
             <button id="loginBtn" class="login-btn">Entrar</button>
+            <button id="signupBtn" class="login-btn" style="margin-top:10px;">Criar conta</button>
+
             <div id="loginMsg" class="login-msg"></div>
         </div>
     </div>
 
     <div id="cards" style="display:none;"></div>
 
-    <!-- Bibliotecas para gerar PDF (download direto, sem tela de impressão) -->
+    <!-- PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <script src="script.js"></script>
+    <!-- Supabase (precisa vir ANTES do script.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+    <!-- Seu script -->
+    <script src="./script.js"></script>
 </body>
 
 </html>
