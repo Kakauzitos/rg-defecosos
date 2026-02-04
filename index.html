@@ -42,9 +42,11 @@
                 <div class="home-title">Escolha onde ir</div>
                 <div class="home-sub">RG ou Defebank</div>
 
+                <!-- ✅ ALTERAÇÃO: adicionamos Ranking -->
                 <div class="home-actions">
                     <button class="home-btn" id="openRgBtn">RG</button>
                     <button class="home-btn" id="openBankBtn">Defebank</button>
+                    <button class="home-btn" id="openRankBtn">Ranking</button>
                 </div>
             </div>
         </div>
@@ -87,6 +89,16 @@
                 </div>
             </div>
         </div>
+
+        <!-- ✅ NOVO: RANK VIEW -->
+        <div class="bank" id="rankView" style="display:none;">
+            <div class="bank-card bank-wide">
+                <div class="bank-title">Ranking Defecoins</div>
+                <div class="bank-muted" id="rankSub">Top saldos do Defebank</div>
+                <div class="tx-list" id="rankList"></div>
+            </div>
+        </div>
+
     </div>
 
     <!-- PDF -->

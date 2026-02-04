@@ -3,9 +3,13 @@ const SUPABASE_URL = "https://sfppqbxowbtkrhdbaykv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcHBxYnhvd2J0a3JoZGJheWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMDE2OTAsImV4cCI6MjA4NTc3NzY5MH0.FgMcaUDRLVniGSjCW5eKL40nTT_zQoom4RujWGCq898";
 
 // ====== Supabase client ======
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-});
+const sb = window.supabase.createClientXercesClient
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  })
+  : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
 
 // ====== Helpers ======
 function $(id) { return document.getElementById(id); }
@@ -22,10 +26,12 @@ function normalizeRegistro(v) {
 }
 
 // ====== Views ======
+// ✅ ALTERAÇÃO: adicionamos rankView
 function showView(name) {
   $("homeView").style.display = name === "home" ? "flex" : "none";
   $("rgView").style.display = name === "rg" ? "block" : "none";
   $("bankView").style.display = name === "bank" ? "block" : "none";
+  $("rankView").style.display = name === "rank" ? "block" : "none";
 }
 
 function showApp() {
@@ -165,7 +171,6 @@ function renderRG(p) {
         return;
       }
 
-      // OBS: Para upload funcionar, você precisa ter criado o bucket rg-photos e policies.
       const path = `${user.id}/photo.jpg`;
 
       const up = await sb.storage
@@ -196,7 +201,6 @@ function renderRG(p) {
         return;
       }
 
-      // recarrega RG
       const rg = await carregarMeuRG(user.id);
       renderRG(rg);
     };
@@ -261,7 +265,6 @@ let cachedRecipient = null; // { user_id, nome, registro }
 async function lookupRecipientByRegistro(registro) {
   const { data, error } = await sb.rpc("lookup_registro", { p_registro: registro });
   if (error) throw error;
-  // RPC retorna array (table)
   return (data && data.length) ? data[0] : null;
 }
 
@@ -273,7 +276,6 @@ async function transfer(registro, amount, memo) {
   });
 
   if (error) throw error;
-  // retorna array (table)
   return (data && data.length) ? data[0] : null;
 }
 
@@ -287,7 +289,6 @@ async function openBank() {
   const user = u?.user;
   if (!user) return;
 
-  // saldo
   $("balanceSub").textContent = "Carregando...";
   try {
     const wallet = await carregarWallet(user.id);
@@ -298,7 +299,6 @@ async function openBank() {
     $("balanceSub").textContent = "Wallet não encontrada. Crie uma linha em wallets para este usuário.";
   }
 
-  // histórico
   try {
     const hist = await carregarHistorico(user.id);
     renderHistorico(hist, user.id);
@@ -307,6 +307,45 @@ async function openBank() {
   }
 
   showView("bank");
+}
+
+// ====== ✅ RANKING (NOVO) ======
+async function carregarRanking(limit = 20) {
+  const { data, error } = await sb.rpc("get_leaderboard", { p_limit: limit });
+  if (error) throw error;
+  return data || [];
+}
+
+function renderRanking(list) {
+  const box = $("rankList");
+  if (!list.length) {
+    box.innerHTML = `<div class="bank-muted">Ninguém apareceu ainda. Falta wallet/RG.</div>`;
+    return;
+  }
+
+  box.innerHTML = list.map((p, i) => `
+    <div class="tx-item">
+      <div class="tx-top">
+        <div>#${i + 1} • ${p.nome}</div>
+        <div>DF$ ${p.balance}</div>
+      </div>
+      <div class="tx-sub">RG: ${p.registro}</div>
+    </div>
+  `).join("");
+}
+
+async function openRank() {
+  $("rankSub").textContent = "Carregando...";
+  showView("rank");
+
+  try {
+    const list = await carregarRanking(20);
+    renderRanking(list);
+    $("rankSub").textContent = "Top 20 saldos do Defebank";
+  } catch (e) {
+    $("rankSub").textContent = "Erro ao carregar ranking.";
+    $("rankList").innerHTML = `<div class="bank-muted">${e.message || e}</div>`;
+  }
 }
 
 // ====== Login ======
@@ -352,13 +391,11 @@ async function enterApp() {
   const { data } = await sb.auth.getUser();
   const user = data?.user;
   if (!user) return;
-
   showApp();
 }
 
 // ====== Wiring ======
 window.addEventListener("DOMContentLoaded", async () => {
-  // botões login
   $("loginBtn").onclick = loginEmail;
   $("signupBtn").onclick = signupEmail;
 
@@ -366,7 +403,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (e.key === "Enter") $("loginBtn").click();
   });
 
-  // topbar
   $("logoutBtn").onclick = async () => {
     await sb.auth.signOut();
     location.reload();
@@ -374,7 +410,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   $("goHomeBtn").onclick = () => showView("home");
 
-  // menu
   $("openRgBtn").onclick = async () => {
     const { data: u } = await sb.auth.getUser();
     const user = u?.user;
@@ -397,7 +432,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   $("openBankBtn").onclick = openBank;
 
-  // PIX-like preview
+  // ✅ NOVO: botão Ranking
+  $("openRankBtn").onclick = openRank;
+
+  // preview PIX
   let lookupTimer = null;
 
   $("toRegistroInput").addEventListener("input", () => {
@@ -439,7 +477,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     $("sendBtn").disabled = !(cachedRecipient && okAmount);
   }
 
-  // enviar
   $("sendBtn").onclick = async () => {
     showBankMsg("");
 
@@ -466,10 +503,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         showBankMsg(result?.message || "Falha na transferência.");
       } else {
         showBankMsg(result.message, true);
-        // limpar campos
         $("amountInput").value = "";
         $("memoInput").value = "";
-        // recarregar bank
         await openBank();
       }
     } catch (e) {
@@ -483,7 +518,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // auto-enter se já tem sessão
+  // auto-login
   const sess = await sb.auth.getSession();
   if (sess?.data?.session) {
     showApp();
