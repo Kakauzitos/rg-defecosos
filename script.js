@@ -1,37 +1,53 @@
 let pessoasCache = null;
 
 async function carregarPessoas() {
-    if (pessoasCache) return pessoasCache;
-    const res = await fetch("./data.json");
-    pessoasCache = await res.json();
-    return pessoasCache;
+  if (pessoasCache) return pessoasCache;
+  const res = await fetch("./data.json");
+  pessoasCache = await res.json();
+  return pessoasCache;
 }
 
 function normalizar(v) {
-    return (v || "").trim().toUpperCase();
+  return (v || "").trim().toUpperCase();
+}
+
+function photoKey(registro) {
+  return `photo_${normalizar(registro)}`;
+}
+
+function getSavedPhoto(registro) {
+  return localStorage.getItem(photoKey(registro)) || "";
+}
+
+function savePhoto(registro, dataUrl) {
+  localStorage.setItem(photoKey(registro), dataUrl);
 }
 
 function renderRG(p) {
-    const cardsDiv = document.getElementById("cards");
+  const cardsDiv = document.getElementById("cards");
 
-    // Topo com botão sair (sem bagunçar o flex do #cards)
-    const topbar = `
-    <div style="width:100%; display:flex; justify-content:center; margin-bottom:18px;">
-      <button class="logout-btn" id="logoutBtn">Sair</button>
+  // Foto salva localmente (se existir) tem prioridade
+  const saved = getSavedPhoto(p.registro);
+  const fotoFinal = saved || p.foto || "";
+
+  const actions = `
+    <div class="actions-bar">
+      <button class="action-btn pdf" id="pdfBtn">Baixar em PDF</button>
+      <button class="action-btn" id="logoutBtn">Sair</button>
     </div>
   `;
 
-    const cardFront = `
-    <div class="card card-front">
+  const cardFront = `
+    <div class="card card-front" id="cardFront">
       <div class="logo-area">
         <div class="club-title">${p.grupo || "NOME DO GRUPO / LOGO"}</div>
       </div>
 
-      <div class="photo-container">
-        ${p.foto
-            ? `<img class="photo-img" src="${p.foto}" alt="Foto de ${p.nome}">`
-            : `<div class="photo-placeholder">FOTO</div>`
-        }
+      <div class="photo-container" id="photoArea" title="Clique para enviar/alterar a foto">
+        ${fotoFinal
+      ? `<img class="photo-img" src="${fotoFinal}" alt="Foto de ${p.nome}">`
+      : `<div class="photo-placeholder">CLIQUE<br>PARA<br>FOTO</div>`
+    }
       </div>
 
       <div class="info-block">
@@ -49,8 +65,8 @@ function renderRG(p) {
     </div>
   `;
 
-    const cardBack = `
-    <div class="card card-back">
+  const cardBack = `
+    <div class="card card-back" id="cardBack">
       <div class="data-grid">
         <div class="data-row">
           <span class="back-label">DATA DE EMISSÃO</span>
@@ -74,76 +90,105 @@ function renderRG(p) {
     </div>
   `;
 
-    const pair = `
+  const pair = `
     <div class="person-wrap">
       ${cardFront}
       ${cardBack}
     </div>
   `;
 
-    cardsDiv.innerHTML = topbar + pair;
+  cardsDiv.innerHTML = actions + pair;
 
-    // botão sair
-    document.getElementById("logoutBtn").onclick = () => {
-        localStorage.removeItem("rg_code");
-        localStorage.removeItem("rg_pin");
-        location.reload();
+  // Ações
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.removeItem("rg_code");
+    localStorage.removeItem("rg_pin");
+    location.reload();
+  };
+
+  document.getElementById("pdfBtn").onclick = () => {
+    // abre janela de impressão; usuário escolhe "Salvar como PDF"
+    window.print();
+  };
+
+  // Upload de foto (por usuário)
+  const photoArea = document.getElementById("photoArea");
+  photoArea.onclick = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      // Limite simples pra não explodir localStorage
+      if (file.size > 2_000_000) {
+        alert("Foto muito grande. Usa uma imagem menor (até ~2MB).");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        savePhoto(p.registro, dataUrl);
+        renderRG(p); // re-render com a foto nova
+      };
+      reader.readAsDataURL(file);
     };
+    input.click();
+  };
 }
 
 async function loginFake() {
-    const code = normalizar(document.getElementById("codeInput").value);
-    const pin = (document.getElementById("pinInput").value || "").trim();
-    const msg = document.getElementById("loginMsg");
+  const code = normalizar(document.getElementById("codeInput").value);
+  const pin = (document.getElementById("pinInput").value || "").trim();
+  const msg = document.getElementById("loginMsg");
 
-    if (!code || !pin) {
-        msg.textContent = "Digite o código e o PIN.";
-        return;
-    }
+  if (!code || !pin) {
+    msg.textContent = "Digite o código e o PIN.";
+    return;
+  }
 
-    const pessoas = await carregarPessoas();
+  const pessoas = await carregarPessoas();
 
-    const pessoa = pessoas.find(p =>
-        normalizar(p.registro) === code && (p.pin || "") === pin
-    );
+  const pessoa = pessoas.find(p =>
+    normalizar(p.registro) === code && (p.pin || "") === pin
+  );
 
-    if (!pessoa) {
-        msg.textContent = "Código ou PIN inválido.";
-        return;
-    }
+  if (!pessoa) {
+    msg.textContent = "Código ou PIN inválido.";
+    return;
+  }
 
-    localStorage.setItem("rg_code", code);
-    localStorage.setItem("rg_pin", pin);
+  localStorage.setItem("rg_code", code);
+  localStorage.setItem("rg_pin", pin);
 
-    document.getElementById("loginWrap").style.display = "none";
+  document.getElementById("loginWrap").style.display = "none";
+  const cardsDiv = document.getElementById("cards");
+  cardsDiv.style.display = "flex"; // mantém seu layout original
 
-    // IMPORTANTE: voltar #cards para FLEX (não block)
-    const cardsDiv = document.getElementById("cards");
-    cardsDiv.style.display = "flex"; // <- isso devolve seu layout original
-
-    renderRG(pessoa);
+  renderRG(pessoa);
 }
 
-// click + enter
+// Eventos
 document.getElementById("loginBtn").addEventListener("click", loginFake);
 document.getElementById("codeInput").addEventListener("keydown", e => {
-    if (e.key === "Enter") loginFake();
+  if (e.key === "Enter") loginFake();
 });
 document.getElementById("pinInput").addEventListener("keydown", e => {
-    if (e.key === "Enter") loginFake();
+  if (e.key === "Enter") loginFake();
 });
 
-// auto-login
+// Auto-login
 const savedCode = localStorage.getItem("rg_code");
 const savedPin = localStorage.getItem("rg_pin");
 
 if (savedCode && savedPin) {
-    document.getElementById("codeInput").value = savedCode;
-    document.getElementById("pinInput").value = savedPin;
+  document.getElementById("codeInput").value = savedCode;
+  document.getElementById("pinInput").value = savedPin;
 
-    // mostra cards como flex antes de renderizar
-    document.getElementById("loginWrap").style.display = "none";
-    document.getElementById("cards").style.display = "flex";
+  document.getElementById("loginWrap").style.display = "none";
+  document.getElementById("cards").style.display = "flex";
 
-    loginFake();
+  loginFake();
 }

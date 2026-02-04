@@ -288,3 +288,69 @@ body {
     cursor: pointer;
     font-weight: 700;
 }
+
+/* ===== AÇÕES (SAIR / PDF) ===== */
+.actions-bar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.action-btn {
+    width: 340px;
+    max-width: 340px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #ffffff;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.action-btn.pdf {
+    border-color: #d4af37;
+    color: #0f172a;
+}
+
+/* Foto clicável */
+.photo-container {
+    cursor: pointer;
+}
+
+/* ===== IMPRESSÃO / PDF ===== */
+@media print {
+
+    /* some com login e botões */
+    .login-wrap,
+    .actions-bar,
+    .logout-btn {
+        display: none !important;
+    }
+
+    /* fundo branco e sem padding */
+    body {
+        background: #fff !important;
+        padding: 0 !important;
+    }
+
+    /* só o RG aparece */
+    #cards {
+        display: flex !important;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    /* evita cortar cartão na impressão */
+    .card {
+        box-shadow: none !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* tira margens do navegador (nem sempre funciona, mas ajuda) */
+    @page {
+        margin: 10mm;
+    }
+}
