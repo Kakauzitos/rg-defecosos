@@ -10,9 +10,10 @@
 
 <body>
 
+    <!-- LOGIN -->
     <div class="login-wrap" id="loginWrap">
         <div class="login-card">
-            <div class="login-title">Acessar RG</div>
+            <div class="login-title">Acessar</div>
             <div class="login-sub">Email + Senha</div>
 
             <input id="emailInput" class="login-input" placeholder="email@exemplo.com" autocomplete="off">
@@ -25,16 +26,76 @@
         </div>
     </div>
 
-    <div id="cards" style="display:none;"></div>
+    <!-- APP -->
+    <div class="app-wrap" id="appWrap" style="display:none;">
+        <div class="topbar">
+            <div class="brand">Defecosos</div>
+            <div class="topbar-actions">
+                <button class="top-btn" id="goHomeBtn">Menu</button>
+                <button class="top-btn" id="logoutBtn">Sair</button>
+            </div>
+        </div>
+
+        <!-- MENU -->
+        <div class="home" id="homeView">
+            <div class="home-card">
+                <div class="home-title">Escolha onde ir</div>
+                <div class="home-sub">RG ou Defebank</div>
+
+                <div class="home-actions">
+                    <button class="home-btn" id="openRgBtn">RG</button>
+                    <button class="home-btn" id="openBankBtn">Defebank</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RG VIEW -->
+        <div id="rgView" style="display:none;">
+            <div id="cards"></div>
+        </div>
+
+        <!-- BANK VIEW -->
+        <div class="bank" id="bankView" style="display:none;">
+            <div class="bank-grid">
+                <div class="bank-card">
+                    <div class="bank-title">Saldo</div>
+                    <div class="bank-balance" id="balanceText">DF$ 0</div>
+                    <div class="bank-muted" id="balanceSub">Carregando...</div>
+                </div>
+
+                <div class="bank-card">
+                    <div class="bank-title">Transferir</div>
+
+                    <label class="bank-label">RG do destinatário</label>
+                    <input class="bank-input" id="toRegistroInput" placeholder="DF-002/2026">
+
+                    <div class="bank-preview" id="recipientPreview">Digite um RG para identificar</div>
+
+                    <label class="bank-label">Valor (DF$)</label>
+                    <input class="bank-input" id="amountInput" placeholder="Ex: 10" inputmode="numeric">
+
+                    <label class="bank-label">Descrição (opcional)</label>
+                    <input class="bank-input" id="memoInput" placeholder="Ex: lanche">
+
+                    <button class="bank-send" id="sendBtn" disabled>Enviar</button>
+                    <div class="bank-msg" id="bankMsg"></div>
+                </div>
+
+                <div class="bank-card bank-wide">
+                    <div class="bank-title">Histórico</div>
+                    <div class="tx-list" id="txList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- Supabase (precisa vir ANTES do script.js) -->
+    <!-- Supabase UMD -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-    <!-- Seu script -->
     <script src="./script.js"></script>
 </body>
 

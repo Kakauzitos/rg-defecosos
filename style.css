@@ -1,9 +1,162 @@
+/* ===== Base ===== */
 body {
     font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
     background-color: #f1f5f9;
     padding: 24px;
+    margin: 0;
 }
 
+* {
+    box-sizing: border-box;
+}
+
+/* ===== LOGIN ===== */
+.login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.login-card {
+    width: 360px;
+    background: #0f172a;
+    color: #fff;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, .25);
+}
+
+.login-title {
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+}
+
+.login-sub {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+}
+
+.login-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #111827;
+    color: #fff;
+    outline: none;
+    margin-bottom: 10px;
+}
+
+.login-input:focus {
+    border-color: #d4af37;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #d4af37;
+    background: rgba(212, 175, 55, .15);
+    color: #d4af37;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.login-btn:hover {
+    filter: brightness(1.08);
+}
+
+.login-msg {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #fca5a5;
+}
+
+/* ===== Topbar / App ===== */
+.app-wrap {
+    min-height: 100vh;
+}
+
+.topbar {
+    max-width: 1100px;
+    margin: 0 auto 18px auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand {
+    font-weight: 900;
+    letter-spacing: .5px;
+    color: #0f172a;
+}
+
+.topbar-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.top-btn {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+/* ===== Home ===== */
+.home {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+}
+
+.home-card {
+    width: 520px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, .08);
+}
+
+.home-title {
+    font-weight: 900;
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.home-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 14px;
+}
+
+.home-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.home-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+/* ===== RG Cards Layout ===== */
 #cards {
     display: flex;
     flex-wrap: wrap;
@@ -65,6 +218,7 @@ body {
 .photo-container {
     z-index: 1;
     margin-bottom: 10px;
+    cursor: pointer;
 }
 
 .photo-placeholder {
@@ -83,7 +237,6 @@ body {
     user-select: none;
 }
 
-/* Foto real */
 .photo-img {
     width: 80px;
     height: 80px;
@@ -197,7 +350,7 @@ body {
     margin-top: 4px;
 }
 
-/* Cada pessoa fica como um “par” (frente + verso) */
+/* Frente + verso */
 .person-wrap {
     display: flex;
     gap: 20px;
@@ -205,165 +358,130 @@ body {
     justify-content: center;
 }
 
-/* --- LOGIN FAKE --- */
-.login-wrap {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    box-sizing: border-box;
+/* ===== Bank ===== */
+.bank {
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
-.login-card {
-    width: 360px;
-    background: #0f172a;
-    color: #fff;
-    border: 1px solid #334155;
+.bank-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.bank-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
     border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.25);
+    padding: 16px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, .06);
 }
 
-.login-title {
-    font-weight: 800;
-    font-size: 18px;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
+.bank-wide {
+    grid-column: 1 / -1;
 }
 
-.login-sub {
-    font-size: 12px;
-    color: #94a3b8;
-    margin-bottom: 12px;
+.bank-title {
+    font-weight: 900;
+    margin-bottom: 10px;
 }
 
-.login-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #334155;
-    background: #111827;
-    color: #fff;
-    outline: none;
-}
-
-.login-input:focus {
-    border-color: #d4af37;
-}
-
-.login-btn {
-    width: 100%;
-    margin-top: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #d4af37;
-    background: rgba(212, 175, 55, 0.15);
-    color: #d4af37;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.login-btn:hover {
-    filter: brightness(1.1);
-}
-
-.login-msg {
-    margin-top: 10px;
-    font-size: 12px;
-    color: #fca5a5;
-    /* erro */
-}
-
-/* botão sair */
-.logout-btn {
-    width: 340px;
-    margin: 0 auto 18px auto;
-    display: block;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #334155;
-    background: #ffffff;
-    cursor: pointer;
-    font-weight: 700;
-}
-
-/* ===== AÇÕES (SAIR / PDF) ===== */
-.actions-bar {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 18px;
-}
-
-.action-btn {
-    width: 340px;
-    max-width: 340px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #334155;
-    background: #ffffff;
-    cursor: pointer;
-    font-weight: 700;
-}
-
-.action-btn.pdf {
-    border-color: #d4af37;
+.bank-balance {
+    font-size: 28px;
+    font-weight: 900;
     color: #0f172a;
 }
 
-/* Foto clicável */
-.photo-container {
+.bank-muted {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 6px;
+}
+
+.bank-label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #334155;
+}
+
+.bank-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    outline: none;
+}
+
+.bank-input:focus {
+    border-color: #d4af37;
+}
+
+.bank-preview {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px dashed #cbd5e1;
+    font-size: 12px;
+    color: #334155;
+    background: #f8fafc;
+}
+
+.bank-send {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #d4af37;
+    background: rgba(212, 175, 55, .15);
+    color: #d4af37;
+    font-weight: 900;
     cursor: pointer;
 }
 
-/* ===== IMPRESSÃO / PDF ===== */
-@media print {
+.bank-send:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
 
-    /* some com login e botões */
-    .login-wrap,
-    .actions-bar,
-    .logout-btn {
-        display: none !important;
+.bank-msg {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #ef4444;
+}
+
+.tx-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tx-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+}
+
+.tx-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-weight: 900;
+}
+
+.tx-sub {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #64748b;
+    word-break: break-word;
+}
+
+@media (max-width: 900px) {
+    .bank-grid {
+        grid-template-columns: 1fr;
     }
-
-    /* fundo branco e sem padding */
-    body {
-        background: #fff !important;
-        padding: 0 !important;
-    }
-
-    /* só o RG aparece */
-    #cards {
-        display: flex !important;
-        justify-content: center;
-        gap: 20px;
-    }
-
-    /* evita cortar cartão na impressão */
-    .card {
-        box-shadow: none !important;
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-
-    /* tira margens do navegador (nem sempre funciona, mas ajuda) */
-    @page {
-        margin: 10mm;
-    }
-
-    @media print {
-        * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-
-        .card-front {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-            color: #fff !important;
-        }
-    }
-
 }

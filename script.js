@@ -1,18 +1,45 @@
-// COLE AQUI
+// ====== COLE SUAS CHAVES AQUI ======
 const SUPABASE_URL = "https://sfppqbxowbtkrhdbaykv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcHBxYnhvd2J0a3JoZGJheWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMDE2OTAsImV4cCI6MjA4NTc3NzY5MH0.FgMcaUDRLVniGSjCW5eKL40nTT_zQoom4RujWGCq898";
 
-function showMsg(text) {
-  const el = document.getElementById("loginMsg");
-  if (el) el.textContent = text || "";
+// ====== Supabase client ======
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+
+// ====== Helpers ======
+function $(id) { return document.getElementById(id); }
+
+function showLoginMsg(t) { $("loginMsg").textContent = t || ""; }
+function showBankMsg(t, ok = false) {
+  const el = $("bankMsg");
+  el.style.color = ok ? "#059669" : "#ef4444";
+  el.textContent = t || "";
 }
 
-function mustGet(id) {
-  const el = document.getElementById(id);
-  if (!el) throw new Error(`Elemento #${id} não encontrado no HTML.`);
-  return el;
+function normalizeRegistro(v) {
+  return (v || "").trim().toUpperCase();
 }
 
+// ====== Views ======
+function showView(name) {
+  $("homeView").style.display = name === "home" ? "flex" : "none";
+  $("rgView").style.display = name === "rg" ? "block" : "none";
+  $("bankView").style.display = name === "bank" ? "block" : "none";
+}
+
+function showApp() {
+  $("loginWrap").style.display = "none";
+  $("appWrap").style.display = "block";
+  showView("home");
+}
+
+function showLogin() {
+  $("loginWrap").style.display = "flex";
+  $("appWrap").style.display = "none";
+}
+
+// ====== PDF ======
 async function baixarPDF(registro) {
   const btn = document.getElementById("pdfBtn");
   const old = btn.textContent;
@@ -46,15 +73,22 @@ async function baixarPDF(registro) {
   }
 }
 
+// ====== RG ======
+async function carregarMeuRG(userId) {
+  const { data, error } = await sb
+    .from("rgs")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 function renderRG(p) {
-  const cardsDiv = mustGet("cards");
+  const cardsDiv = $("cards");
 
   cardsDiv.innerHTML = `
-    <div class="actions-bar">
-      <button class="action-btn pdf" id="pdfBtn">Baixar em PDF</button>
-      <button class="action-btn" id="logoutBtn">Sair</button>
-    </div>
-
     <div class="person-wrap">
       <div class="card card-front">
         <div class="logo-area">
@@ -70,10 +104,12 @@ function renderRG(p) {
 
         <div class="info-block">
           <div class="member-name">${p.nome || ""}</div>
+
           <div>
             <span class="label">Nº REGISTO</span><br>
             <span class="value" style="font-family: 'Courier New', monospace;">${p.registro || ""}</span>
           </div>
+
           <div>
             <span class="status-pill">${p.status || ""}</span>
           </div>
@@ -86,10 +122,12 @@ function renderRG(p) {
             <span class="back-label">DATA DE EMISSÃO</span>
             <span class="back-value">${p.emissao || ""}</span>
           </div>
+
           <div class="data-row">
             <span class="back-label">EMITIDO POR</span>
-            <span class="back-value">${p.emitidoPor || ""}</span>
+            <span class="back-value">${p.emitidoPor || p["emitidoPor"] || ""}</span>
           </div>
+
           <div class="validity-box">
             <span class="back-label">VALIDADE</span><br>
             <span class="validity-text">${p.validade || ""}</span>
@@ -101,18 +139,17 @@ function renderRG(p) {
         </div>
       </div>
     </div>
+
+    <div style="display:flex; justify-content:center; margin-top:16px;">
+      <button class="top-btn" id="pdfBtn">Baixar RG em PDF</button>
+    </div>
   `;
 
-  document.getElementById("pdfBtn").onclick = () => baixarPDF(p.registro);
+  $("pdfBtn").onclick = () => baixarPDF(p.registro);
 
-  document.getElementById("logoutBtn").onclick = async () => {
-    await supabase.auth.signOut();
-    location.reload();
-  };
-
-  document.getElementById("photoArea").onclick = async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData?.user;
+  $("photoArea").onclick = async () => {
+    const { data: u } = await sb.auth.getUser();
+    const user = u?.user;
     if (!user) return;
 
     const input = document.createElement("input");
@@ -122,14 +159,16 @@ function renderRG(p) {
     input.onchange = async () => {
       const file = input.files && input.files[0];
       if (!file) return;
+
       if (file.size > 2_000_000) {
         alert("Foto muito grande (máx ~2MB).");
         return;
       }
 
+      // OBS: Para upload funcionar, você precisa ter criado o bucket rg-photos e policies.
       const path = `${user.id}/photo.jpg`;
 
-      const up = await supabase.storage
+      const up = await sb.storage
         .from("rg-photos")
         .upload(path, file, { upsert: true, contentType: file.type });
 
@@ -138,7 +177,7 @@ function renderRG(p) {
         return;
       }
 
-      const signed = await supabase.storage
+      const signed = await sb.storage
         .from("rg-photos")
         .createSignedUrl(path, 60 * 60 * 24 * 7);
 
@@ -147,7 +186,7 @@ function renderRG(p) {
         return;
       }
 
-      const upd = await supabase
+      const upd = await sb
         .from("rgs")
         .update({ photo_url: signed.data.signedUrl })
         .eq("user_id", user.id);
@@ -157,6 +196,7 @@ function renderRG(p) {
         return;
       }
 
+      // recarrega RG
       const rg = await carregarMeuRG(user.id);
       renderRG(rg);
     };
@@ -165,9 +205,10 @@ function renderRG(p) {
   };
 }
 
-async function carregarMeuRG(userId) {
-  const { data, error } = await supabase
-    .from("rgs")
+// ====== Bank ======
+async function carregarWallet(userId) {
+  const { data, error } = await sb
+    .from("wallets")
     .select("*")
     .eq("user_id", userId)
     .single();
@@ -176,69 +217,277 @@ async function carregarMeuRG(userId) {
   return data;
 }
 
-async function login() {
-  const email = mustGet("emailInput").value.trim();
-  const pass = mustGet("passInput").value.trim();
-  showMsg("");
+async function carregarHistorico(userId) {
+  const { data, error } = await sb
+    .from("transactions")
+    .select("id, from_user, to_user, amount, memo, created_at")
+    .or(`from_user.eq.${userId},to_user.eq.${userId}`)
+    .order("created_at", { ascending: false })
+    .limit(30);
 
-  const res = await supabase.auth.signInWithPassword({ email, password: pass });
-  if (res.error) throw res.error;
+  if (error) throw error;
+  return data || [];
+}
 
-  // Sessão existe só enquanto a aba tá aberta (persistSession: false)
-  const { data: u } = await supabase.auth.getUser();
-  const user = u?.user;
-  if (!user) throw new Error("Login ok, mas não achei usuário.");
+function formatDate(ts) {
+  try { return new Date(ts).toLocaleString(); } catch { return ts; }
+}
 
-  mustGet("loginWrap").style.display = "none";
-  mustGet("cards").style.display = "flex";
+function renderHistorico(list, myId) {
+  const box = $("txList");
+  if (!list.length) {
+    box.innerHTML = `<div class="bank-muted">Nenhuma transação ainda.</div>`;
+    return;
+  }
 
-  try {
-    const rg = await carregarMeuRG(user.id);
-    renderRG(rg);
-  } catch (e) {
-    mustGet("cards").innerHTML = `
-      <div style="max-width:700px; padding:16px; background:#fff; border:1px solid #e2e8f0; border-radius:12px;">
-        <b>Logado, mas sem RG cadastrado.</b><br><br>
-        Cadastre na tabela <code>rgs</code> com <code>user_id = ${user.id}</code>.
+  box.innerHTML = list.map(tx => {
+    const isOut = tx.from_user === myId;
+    const sign = isOut ? "-" : "+";
+    const who = isOut ? "Enviado" : "Recebido";
+    return `
+      <div class="tx-item">
+        <div class="tx-top">
+          <div>${who}</div>
+          <div>${sign} DF$ ${tx.amount}</div>
+        </div>
+        <div class="tx-sub">${tx.memo ? tx.memo : "(sem descrição)"}<br>${formatDate(tx.created_at)}</div>
       </div>
     `;
-  }
+  }).join("");
 }
 
-async function signup() {
-  const email = mustGet("emailInput").value.trim();
-  const pass = mustGet("passInput").value.trim();
-  showMsg("");
+let cachedRecipient = null; // { user_id, nome, registro }
 
-  const res = await supabase.auth.signUp({ email, password: pass });
-  if (res.error) throw res.error;
-
-  showMsg("Conta criada. Agora falta cadastrar seu RG na tabela rgs (admin faz isso).");
+async function lookupRecipientByRegistro(registro) {
+  const { data, error } = await sb.rpc("lookup_registro", { p_registro: registro });
+  if (error) throw error;
+  // RPC retorna array (table)
+  return (data && data.length) ? data[0] : null;
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+async function transfer(registro, amount, memo) {
+  const { data, error } = await sb.rpc("transfer_defecoins", {
+    p_to_registro: registro,
+    p_amount: amount,
+    p_memo: memo || ""
+  });
+
+  if (error) throw error;
+  // retorna array (table)
+  return (data && data.length) ? data[0] : null;
+}
+
+async function openBank() {
+  showBankMsg("");
+  $("recipientPreview").textContent = "Digite um RG para identificar";
+  $("sendBtn").disabled = true;
+  cachedRecipient = null;
+
+  const { data: u } = await sb.auth.getUser();
+  const user = u?.user;
+  if (!user) return;
+
+  // saldo
+  $("balanceSub").textContent = "Carregando...";
   try {
-    // Se o Supabase não carregou, nada funciona mesmo
-    if (!window.supabase) {
-      showMsg("Erro: Supabase não carregou. Verifique o <script> do supabase no index.html.");
+    const wallet = await carregarWallet(user.id);
+    $("balanceText").textContent = `DF$ ${wallet.balance}`;
+    $("balanceSub").textContent = "Defecoins disponíveis";
+  } catch (e) {
+    $("balanceText").textContent = "DF$ ?";
+    $("balanceSub").textContent = "Wallet não encontrada. Crie uma linha em wallets para este usuário.";
+  }
+
+  // histórico
+  try {
+    const hist = await carregarHistorico(user.id);
+    renderHistorico(hist, user.id);
+  } catch (e) {
+    $("txList").innerHTML = `<div class="bank-muted">Erro ao carregar histórico.</div>`;
+  }
+
+  showView("bank");
+}
+
+// ====== Login ======
+async function loginEmail() {
+  const email = $("emailInput").value.trim();
+  const pass = $("passInput").value.trim();
+  showLoginMsg("");
+
+  if (!email || !pass) {
+    showLoginMsg("Preenche email e senha.");
+    return;
+  }
+
+  const res = await sb.auth.signInWithPassword({ email, password: pass });
+  if (res.error) {
+    showLoginMsg("Erro no login: " + res.error.message);
+    return;
+  }
+
+  await enterApp();
+}
+
+async function signupEmail() {
+  const email = $("emailInput").value.trim();
+  const pass = $("passInput").value.trim();
+  showLoginMsg("");
+
+  if (!email || !pass) {
+    showLoginMsg("Preenche email e senha.");
+    return;
+  }
+
+  const res = await sb.auth.signUp({ email, password: pass });
+  if (res.error) {
+    showLoginMsg("Erro no cadastro: " + res.error.message);
+    return;
+  }
+
+  showLoginMsg("Conta criada. Agora clique em Entrar.");
+}
+
+async function enterApp() {
+  const { data } = await sb.auth.getUser();
+  const user = data?.user;
+  if (!user) return;
+
+  showApp();
+}
+
+// ====== Wiring ======
+window.addEventListener("DOMContentLoaded", async () => {
+  // botões login
+  $("loginBtn").onclick = loginEmail;
+  $("signupBtn").onclick = signupEmail;
+
+  $("passInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") $("loginBtn").click();
+  });
+
+  // topbar
+  $("logoutBtn").onclick = async () => {
+    await sb.auth.signOut();
+    location.reload();
+  };
+
+  $("goHomeBtn").onclick = () => showView("home");
+
+  // menu
+  $("openRgBtn").onclick = async () => {
+    const { data: u } = await sb.auth.getUser();
+    const user = u?.user;
+    if (!user) return;
+
+    try {
+      const rg = await carregarMeuRG(user.id);
+      renderRG(rg);
+      showView("rg");
+    } catch (e) {
+      $("cards").innerHTML = `
+        <div class="bank-card" style="max-width:700px;">
+          <b>Logado, mas sem RG cadastrado.</b><br><br>
+          Cadastre uma linha em <code>rgs</code> com <code>user_id</code> = ${user.id}.
+        </div>
+      `;
+      showView("rg");
+    }
+  };
+
+  $("openBankBtn").onclick = openBank;
+
+  // PIX-like preview
+  let lookupTimer = null;
+
+  $("toRegistroInput").addEventListener("input", () => {
+    showBankMsg("");
+    $("sendBtn").disabled = true;
+    cachedRecipient = null;
+
+    const reg = normalizeRegistro($("toRegistroInput").value);
+    if (!reg) {
+      $("recipientPreview").textContent = "Digite um RG para identificar";
       return;
     }
 
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-    });
+    $("recipientPreview").textContent = "Procurando...";
+    clearTimeout(lookupTimer);
 
-    // Liga botões
-    mustGet("loginBtn").onclick = () => login().catch(e => showMsg("Erro no login: " + e.message));
-    mustGet("signupBtn").onclick = () => signup().catch(e => showMsg("Erro no cadastro: " + e.message));
+    lookupTimer = setTimeout(async () => {
+      try {
+        const rec = await lookupRecipientByRegistro(reg);
+        if (!rec) {
+          $("recipientPreview").textContent = "RG não encontrado.";
+          return;
+        }
+        cachedRecipient = rec;
+        $("recipientPreview").textContent = `Vai enviar para: ${rec.nome} (${rec.registro})`;
+        validateSend();
+      } catch (e) {
+        $("recipientPreview").textContent = "Erro ao procurar RG.";
+      }
+    }, 300);
+  });
 
-    // Enter no input
-    mustGet("passInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") mustGet("loginBtn").click();
-    });
+  $("amountInput").addEventListener("input", validateSend);
+  $("memoInput").addEventListener("input", validateSend);
 
-    showMsg(""); // tudo ok
-  } catch (e) {
-    showMsg("Erro inicial: " + e.message);
+  function validateSend() {
+    const amount = parseInt(($("amountInput").value || "").trim(), 10);
+    const okAmount = Number.isFinite(amount) && amount > 0;
+    $("sendBtn").disabled = !(cachedRecipient && okAmount);
+  }
+
+  // enviar
+  $("sendBtn").onclick = async () => {
+    showBankMsg("");
+
+    const reg = normalizeRegistro($("toRegistroInput").value);
+    const amount = parseInt(($("amountInput").value || "").trim(), 10);
+    const memo = ($("memoInput").value || "").trim();
+
+    if (!cachedRecipient) {
+      showBankMsg("Escolha um destinatário válido.");
+      return;
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showBankMsg("Valor inválido.");
+      return;
+    }
+
+    $("sendBtn").disabled = true;
+    $("sendBtn").textContent = "Enviando...";
+
+    try {
+      const result = await transfer(reg, amount, memo);
+      if (!result || !result.ok) {
+        showBankMsg(result?.message || "Falha na transferência.");
+      } else {
+        showBankMsg(result.message, true);
+        // limpar campos
+        $("amountInput").value = "";
+        $("memoInput").value = "";
+        // recarregar bank
+        await openBank();
+      }
+    } catch (e) {
+      showBankMsg("Erro: " + (e.message || e));
+    } finally {
+      $("sendBtn").textContent = "Enviar";
+      $("sendBtn").disabled = true;
+      cachedRecipient = null;
+      $("toRegistroInput").value = "";
+      $("recipientPreview").textContent = "Digite um RG para identificar";
+    }
+  };
+
+  // auto-enter se já tem sessão
+  const sess = await sb.auth.getSession();
+  if (sess?.data?.session) {
+    showApp();
+  } else {
+    showLogin();
   }
 });
