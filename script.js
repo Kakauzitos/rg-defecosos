@@ -2,8 +2,6 @@
 const SUPABASE_URL = "https://sfppqbxowbtkrhdbaykv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcHBxYnhvd2J0a3JoZGJheWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMDE2OTAsImV4cCI6MjA4NTc3NzY5MH0.FgMcaUDRLVniGSjCW5eKL40nTT_zQoom4RujWGCq898";
 
-let supabase = null;
-
 function showMsg(text) {
   const el = document.getElementById("loginMsg");
   if (el) el.textContent = text || "";
