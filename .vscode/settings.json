@@ -1,0 +1,14 @@
+{
+    "workbench.startupEditor": "newUntitledFile",
+    "workbench.colorTheme": "Dracula Theme",
+    "workbench.iconTheme": "material-icon-theme",
+    "window.zoomLevel": 0,
+    "editor.fontSize": 13,
+    "editor.renderLineHighlight": "gutter",
+    "terminal.integrated.fontSize": 12,
+    "editor.formatOnSave": true,
+    "editor.autoIndent": "full",
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "editor.guides.bracketPairs": true,
+    "liveServer.settings.donotShowInfoMsg": true
+}
